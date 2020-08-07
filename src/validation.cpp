@@ -148,7 +148,6 @@ void FlushBlockFile(bool fFinalize = false, bool finalize_undo = false);
 CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 {
     AssertLockHeld(cs_main);
-
     BlockMap::const_iterator it = m_block_index.find( m_block_index.hash_function()(hash));
     return it ==  m_block_index.end() ? nullptr : *it;
 
@@ -157,7 +156,7 @@ CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 CBlockIndex* BlockManager::FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
     AssertLockHeld(cs_main);
-
+    
     // Find the latest block common to locator and chain - we expect that
     // locator.vHave is sorted descending by height.
     for (const uint256& hash : locator.vHave) {
@@ -3369,7 +3368,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             }
         }
     }
-    /* CBlockIndex* */ pindex = AddToBlockIndex(block);
+    pindex = AddToBlockIndex(block);
 
     if (ppindex)
         *ppindex = pindex;
