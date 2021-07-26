@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     while (m_node.chainman->ActiveChain().Tip()->nHeight < 209999) {
         CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
         CBlockIndex* next = new CBlockIndex();
-        next->phashBlock = new uint256(InsecureRand256());
+        next->m_hash_block = uint256(InsecureRand256());
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
@@ -381,8 +381,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     while (m_node.chainman->ActiveChain().Tip()->nHeight < 210000) {
         CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
         CBlockIndex* next = new CBlockIndex();
-        next->phashBlock = new uint256(InsecureRand256());
+
+        next->m_hash_block = uint256(InsecureRand256());
+      
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
+
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
@@ -409,11 +412,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.mempool->clear();
 
     // Delete the dummy blocks again.
+
     while (m_node.chainman->ActiveChain().Tip()->nHeight > nHeight) {
         CBlockIndex* del = m_node.chainman->ActiveChain().Tip();
         m_node.chainman->ActiveChain().SetTip(del->pprev);
         m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
-        delete del->phashBlock;
         delete del;
     }
 
