@@ -3708,14 +3708,31 @@ CBlockIndex * BlockManager::InsertBlockIndex(const uint256& hash)
 
     return pindexNew;
 }
+/* 
+struct unordered_node : private CBlockIndex
+{
+private:
+    void* ptr;
+}; */
+CBlockIndex* x;
 
+static inline size_t DynamicUsage(const std::unordered_set<CBlockIndex* , BlockHasher<CBlockIndex> , BlockEqual>& s)
+{
+    return memusage::MallocUsage(sizeof(x)) * s.size() + memusage::MallocUsage(sizeof(void*) * s.bucket_count());
+}
 bool BlockManager::LoadBlockIndex(
     const Consensus::Params& consensus_params,
     std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
 {
+    auto start  = std::chrono::high_resolution_clock::now();
     if (!m_block_tree_db->LoadBlockIndexGuts(consensus_params, [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); })) {
         return false;
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    LogPrintf("shoryak was here");
+    LogPrintf(" %s Duration for loading blocks is %s and memory usage by m_block_index is %0.1fMiB " , __func__ std::to_string(duration.count()) ,DynamicUsage(m_block_index) * (1.0 / (1<<20)));
+   
 
     // Calculate nChainWork
     std::vector<std::pair<int, CBlockIndex*> > vSortedByHeight;
@@ -3776,11 +3793,18 @@ void BlockManager::Unload() {
 
 bool BlockManager::LoadBlockIndexDB(std::set<CBlockIndex*, CBlockIndexWorkComparator>& setBlockIndexCandidates)
 {
+     auto start  = std::chrono::high_resolution_clock::now();
     if (!LoadBlockIndex(
             ::Params().GetConsensus(),
             setBlockIndexCandidates)) {
         return false;
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    LogPrintf("shoryak was here");
+    LogPrintf(" %s Duration for loading blocks is %s and memory usage by m_block_index is %0.1fMiB " , __func__ std::to_string(duration.count()) ,DynamicUsage(m_block_index) * (1.0 / (1<<20)));
+   
 
     // Load block file info
     m_block_tree_db->ReadLastBlockFile(nLastBlockFile);
